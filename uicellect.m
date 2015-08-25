@@ -1,7 +1,7 @@
-function [theChosen, theChosenIDX] = cellect(theCell, varargin)
-% CELLECT Present dialogue for selecting cells from a cell array
+function [theChosen, theChosenIDX] = uicellect(theCell, varargin)
+% UICELLECT Present dialogue for selecting cells from a cell array
 %
-%  USAGE: [theChosen, theChosenIDX] = cellect(theCell, varargin)
+%  USAGE: [theChosen, theChosenIDX] = uicellect(theCell, varargin)
 %
 %  OUTPUT
 %	theChosen:     cell array of chosen items (empty if none chosen)
@@ -45,10 +45,18 @@ else
     ncol = 1; 
     nrow = nopt; 
 end
+screenPos = get(0, 'ScreenSize');
+screenW = screenPos(3);
+screenH = screenPos(4);
+uiW     = 300*ncol;
+uiH     = 40*nrow;
 
-figpos  = [10 10 300*ncol 40*nrow]; 
+figpos = [(screenW/2)-(uiW/2) (screenH/2)-(uiH/2) uiW uiH]; % centered middle
+figpos = [1 (screenH/2)-(uiH/2) uiW uiH]; % left middle
+figpos = [(screenW)-(uiW) (screenH/2)-(uiH/2) uiW uiH]; % right middle
+
 fige  =  figure( ...
-    'Name'                     ,        'CELLECT'           ,...
+    'Name'                     ,        'UICELLECT'           ,...
     'Units'                    ,        'pix'               ,...
     'Position'                 ,        figpos              ,...
     'Resize'                   ,        'on'                ,...
@@ -57,11 +65,18 @@ fige  =  figure( ...
     'DockControls'             ,        'off'               ,...
     'MenuBar'                  ,        'none'              ,...
     'Toolbar'                  ,        'none'              ,...
-    'Tag'                      ,        'cellect dialogue'  ,...
+    'Tag'                      ,        'uicellect dialogue'  ,...
     'WindowStyle'              ,        'normal'            ,...
     'UserData'                 ,        1);
                     
-[pbase, pidx] = pgrid(3, 1, 'margin', .01, 'panelsep', .025, 'parent', fige, 'relheight', [1 nrow 1], 'backg', backgroundcolor, 'foreg', foregroundcolor); 
+[pbase, pidx] = pgrid(3, 1, ...
+    'margin', .01, ...
+    'panelsep', .025, ...
+    'parent', fige, ...
+    'relheight', [1 nrow 1], ...
+    'backg', backgroundcolor, ...
+    'foreg', foregroundcolor); 
+
 ht  =  uicontrol( ...
                'Style'   ,     'text'                                 ,...
               'Parent'   ,     pbase(1)                           ,...
@@ -217,11 +232,17 @@ end
 function cb_selectall(varargin)
 h = varargin{3}; 
 if get(varargin{1}, 'Value')
-    set(h, 'Value', 1);
+    for i = 1:length(h)
+        set(h, 'Value', 1);
+        drawnow; 
+    end
     set(varargin{1}, 'String', 'De-Select All'); 
 else
-    set(h, 'Value', 0);
+    for i = 1:length(h)
+        set(h, 'Value', 0);
+        drawnow; 
+    end
     set(varargin{1}, 'String', 'Select All'); 
 end
-drawnow; 
+drawnow
 end
