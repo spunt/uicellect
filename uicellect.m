@@ -26,13 +26,15 @@ function [theChosen, theChosenIDX] = uicellect(theCell, varargin)
 %	Email:     spunt@caltech.edu
 % ________________________________________________________________________________________
 def = { ... 
-	'Prompt',           'Select from the following:',	...
+	  'Prompt',           'Select from the following:',	...
     'MultiSelect',      true, ...
     'MaxPerColumn',     10, ...
     'rowpixelheight',   40, ...
     'colpixelwidth',    300, ...
     'basefontsize',     14, ...
     'backgroundcolor',  [20/255 23/255 24/255], ...
+    'halign',           'center', ...
+    'valign',           'middle', ...
     'foregroundcolor',  [1 1 1] ...
 	};
 vals = setargs(def, varargin);
@@ -50,10 +52,7 @@ screenW = screenPos(3);
 screenH = screenPos(4);
 uiW     = 300*ncol;
 uiH     = 40*nrow;
-
-figpos = [(screenW/2)-(uiW/2) (screenH/2)-(uiH/2) uiW uiH]; % centered middle
-figpos = [1 (screenH/2)-(uiH/2) uiW uiH]; % left middle
-figpos = [(screenW)-(uiW) (screenH/2)-(uiH/2) uiW uiH]; % right middle
+figpos  = align_figure(uiW, uiH, valign, halign);
 
 fige  =  figure( ...
     'Name'                     ,        'UICELLECT'           ,...
@@ -224,6 +223,32 @@ if ~isempty(optargs)
 end
 for i = 1:size(defaults,1), assignin('caller', defaults{i,1}, defaults{i,2}); end
 if nargout>0, argstruct = cell2struct(defaults(:,2), defaults(:,1)); end
+end
+function figpos = align_figure(uiW, uiH, valign, halign)
+    screenPos   = get(0, 'ScreenSize');
+    screenW     = screenPos(3);
+    screenH     = screenPos(4);
+    figpos      = [0 0 uiW uiH];
+    switch lower(valign)
+        case 'middle'
+          figpos(2) = (screenH/2)-(uiH/2);
+        case {'top', 'upper'}
+          figpos(2) = screenH-uiH; 
+        case {'bottom', 'lower'}
+          figpos(2) = 1; 
+        otherwise
+          error('VALIGN options are: middle, top, upper, bottom, lower')
+    end
+    switch lower(halign)
+        case 'center'
+          figpos(1) = (screenW/2) - (uiW/2);
+        case 'right'
+          figpos(1) = screenW - uiW; 
+        case 'left'
+          figpos(1) = 1; 
+        otherwise
+          error('HALIGN options are: center, left, right')
+    end
 end
 function cb_closefig(varargin)
   set(varargin{3}, 'UserData', varargin{4});
