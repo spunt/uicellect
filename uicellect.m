@@ -1,23 +1,28 @@
 function [theChosen, theChosenIDX] = uicellect(theCell, varargin)
 % UICELLECT Present dialogue for selecting cells from a cell array
 %
-%  USAGE: [theChosen, theChosenIDX] = uicellect(theCell, varargin)
+%     USAGE: [theChosen, theChosenIDX] = uicellect(theCell, varargin)
 %
-%  OUTPUT
+% ________________________________________________________________________________________
+% OUTPUTS
+%
 %	  theChosen:     cell array of chosen items (empty if none chosen)
 %	  theChosenIDX:  idx to input cell array of choices
 %
 % ________________________________________________________________________________________
-%  INPUTS
+% INPUTS
+%
 %	  theCell:  cell array of items to choose from
 %
 % ________________________________________________________________________________________
-%  VARARGIN (partial matches OK; run without arguments to see default values)
+% VARARGIN (partial matches OK; run without arguments to see default values)
+%
 % | NAME            | DEFAULT       
 % |-----------------|---------------------------------------------------------------------
 % | Prompt          | message to present to user at top of gui
-% | MultiSelect     | if true (or 1), user allowed to select multiple items           
-% | MaxPerColumn    | max items per column (if more than # of items, one column layout)
+% | StripPath       | if true (1) and inputs are paths to files, strips path from items 
+% | MultiSelect     | if true (1), user allowed to select multiple items           
+% | MaxPerColumn    | max items per column (if > # of items, then one column layout)
 % | RowPixelHeight  | height of gui rows (one item per row/column), in pixels     
 % | ColPixelWidth   | width of gui columns, in pixels        
 % | BaseFontSize    | base font size (used for item labels)  
@@ -27,13 +32,17 @@ function [theChosen, theChosenIDX] = uicellect(theCell, varargin)
 % | ForegroundColor | gui foreground color
 %
 % ________________________________________________________________________________________
-%  EXAMPLES
+% EXAMPLES
+%
 %   % - Create a length 25 cell array of Items
 %   theCell = cellfun(@sprintf,repmat({'Item %d'},25,1), num2cell((1:25)'),'Unif',false);
+%
 %   % - Present in GUI using Default Settings
 %   [theChosen, theChosenIDX] = uicellect(theCell); 
+%
 %   % - Present in GUI and disable Multi-Selection
 %   [theChosen, theChosenIDX] = uicellect(theCell, 'Multi', 0); 
+%
 %   % - Present in GUI but Change How it Looks
 %   [theChosen, theChosenIDX] = uicellect(theCell,'MaxPer',15,'RowPix',35,'ColPix',150); 
 %
@@ -57,6 +66,7 @@ function [theChosen, theChosenIDX] = uicellect(theCell, varargin)
 % | Defaults for VARARGIN
 def = { ... 
       'Prompt',           'Select from the following:',	...
+      'StripPath',        true, ...
       'MultiSelect',      true, ...
       'MaxPerColumn',     10, ...
       'RowPixelHeight',   40, ...
@@ -73,7 +83,16 @@ vals = setargs(def, varargin);
 
 % | Check arguments
 if nargin < 1, mfile_showhelp; fprintf('\t| - VARARGIN DEFAULTS - |\n'); disp(vals); return; end
+if ischar(theCell), fprintf('\nInput is not a Cell Array! Doing nothing...\n'); return; end
 nopt = length(theCell);
+
+% | Determine if Inputs are Paths to Files and Strip Path if Necessary
+if all(cellfun(@exist, theCell, repmat({'file'}, nopt, 1))) && StripPath
+    [theCellPath, n, e] = cellfun(@fileparts, theCell, 'Unif', false);
+    theCell             = strcat(n, e);
+end
+
+% | Calculate Grid
 if nopt > MaxPerColumn
     ncol = ceil(nopt/MaxPerColumn);
     nrow = ceil(nopt/ncol); 
@@ -232,13 +251,14 @@ set(hok, 'Callback', {@cb_closefig, fige, 1})
 drawnow
 uiwait(fige)
 theChosen       = [];
-theChosenIDX    = []; 
+theChosenIDX    = [];
+if StripPath, theCell = fullfile(theCellPath, theCell); end
 if ishandle(fige)
     if get(fige, 'UserData')
         idx = cell2mat(get(opth, 'Value'));
         if any(idx)
-            str = get(opth, 'string');
-            theChosen       = str(find(idx));
+%             str = get(opth, 'string');
+            theChosen       = theCell(find(idx));
             theChosenIDX    = find(idx);
         end
     end
