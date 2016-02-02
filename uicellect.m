@@ -78,6 +78,8 @@ def = { ...
       'ForegroundColor',  [1 1 1] ...
 	};
 
+
+
 % | Update values for VARARGIN where necessary
 vals = setargs(def, varargin);
 
@@ -90,6 +92,8 @@ nopt = length(theCell);
 if all(cellfun(@exist, theCell, repmat({'file'}, nopt, 1))) && StripPath
     [theCellPath, n, e] = cellfun(@fileparts, theCell, 'Unif', false);
     theCell             = strcat(n, e);
+else
+    StripPath = 0; 
 end
 
 % | Calculate Grid
